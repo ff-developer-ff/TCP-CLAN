@@ -211,7 +211,7 @@ def spam_requests(player_id):
         msg_spam = f"""
 [C][B][11EAFD]‎━━━━━━━━━━━━
 
-[FFFFFF]Requests Sent: [00FF00]{sent}
+[FFFFFF]Requests Sent: [00CCFF]{sent}
 [FFFFFF]Failed Attempts: [FF0000]{failed}
 
 [C][B][11EAFD]‎━━━━━━━━━━━━
@@ -239,12 +239,12 @@ def Increase_visits(player_id):
         msg_visit = f"""
 [C][B][FF0000]‎━━━━━━━━━━━━
 
-[FFFFFF]Player ID: [00FF00]{uid}
-[FFFFFF]Success visit: [00FF00]{succvisit}
-[FFFFFF]Failed visit: [00FF00]{failvisit}
+[FFFFFF]Player ID: [00CCFF]{uid}
+[FFFFFF]Success visit: [00CCFF]{succvisit}
+[FFFFFF]Failed visit: [00CCFF]{failvisit}
 
 [C][B][FF0000]‎━━━━━━━━━━━━
-[C][B][FFB300]Dev:  [00FF00]Hashir!
+[C][B][FFB300]Dev:  [00CCFF]Hashir!
 """
         return msg_visit
     else:
@@ -268,7 +268,7 @@ def GetIdRegion(player_id):
 [FFFFFF]Account Region: {region}
 
 ‎[C][B][FF0000]‎━━━━━━━━━━━━
-[808080][B][C]Dev:  [00FF00]Hashir!
+[808080][B][C]Dev:  [00CCFF]Hashir!
     """
         return msg_visit
     else:
@@ -284,28 +284,31 @@ def newinfo(uid):
         if response.status_code == 200:
             data = response.json()
 
-            account = data.get("AccountInfo", {})
-            social = data.get("socialinfo", {})
-            credit_score_info = data.get("creditScoreInfo", {})
+            # Safely access basic info from the list
+            if "basicinfo" in data and len(data["basicinfo"]) > 0:
+                basic = data["basicinfo"][0]
 
-            formatted_basic = {
-                "level": account.get("AccountLevel", 0),
-                "likes": account.get("AccountLikes", 0),
-                "username": account.get("AccountName", "Unknown"),
-                "region": account.get("AccountRegion", "Unknown"),
-                "bio": social.get("AccountSignature", "No Bio"),
-                "brrankscore": account.get("BrRankPoint", 0),
-                "honorscore": credit_score_info.get("creditScore", 0)
-            }
-
-            return {
-                "status": "ok",
-                "info": {
-                    "basic_info": formatted_basic
+                formatted_basic = {
+                    "level": basic.get("level", 0),
+                    "likes": basic.get("likes", 0),
+                    "username": basic.get("username", "Unknown"),
+                    "region": basic.get("region", "Unknown"),
+                    "bio": basic.get("bio", "No Bio"),
+                    "brrankscore": basic.get("brrankscore", 0),
+                    "honorscore": basic.get("brrankpoint", 0)  # using brrankpoint for honor score
                 }
-            }
 
-        return {"status": "wrong_id", "message": "Invalid UID or region."}
+                return {
+                    "status": "ok",
+                    "info": {
+                        "basic_info": formatted_basic
+                    }
+                }
+
+            else:
+                return {"status": "wrong_id", "message": "basicinfo not found."}
+
+        return {"status": "error", "message": f"Unexpected HTTP status {response.status_code}"}
 
     except requests.Timeout:
         return {"status": "error", "message": "Request timed out."}
@@ -313,6 +316,7 @@ def newinfo(uid):
         return {"status": "error", "message": f"Request failed: {str(e)}"}
     except Exception as e:
         return {"status": "error", "message": f"Unexpected error: {str(e)}"}
+
 
 def send_likes(uid):
     try:
@@ -340,14 +344,14 @@ Please check again
 [C][B][11EAFD]‎━━━━━━━━━━━━
 [FFFFFF]Likes Status:
 
-[00FF00]Likes Sent Successfully!
+[00CCFF]Likes Sent Successfully!
 
-[FFFFFF]Player Name : [00FF00]{player_name}  
-[FFFFFF]Likes Added : [00FF00]{likes_added}  
-[FFFFFF]Likes Before : [00FF00]{likes_before}  
-[FFFFFF]Likes After : [00FF00]{likes_after}  
+[FFFFFF]Player Name : [00CCFF]{player_name}  
+[FFFFFF]Likes Added : [00CCFF]{likes_added}  
+[FFFFFF]Likes Before : [00CCFF]{likes_before}  
+[FFFFFF]Likes After : [00CCFF]{likes_after}  
 [C][B][11EAFD]‎━━━━━━━━━━━━
-[C][B][FFB300]Dev: [FFFFFF]Hashir [00FF00]Xitters!!
+[C][B][FFB300]Dev: [FFFFFF]Hashir [00CCFF]Xitters!!
                 """
             else:
                 message = f"""
@@ -399,7 +403,7 @@ def  generate_random_word():
     return random.choice(word_list)
 def generate_random_color():
 	color_list = [
-    "[00FF00][b][c]",
+    "[00CCFF][b][c]",
     "[FFDD00][b][c]",
     "[3813F3][b][c]",
     "[FF0000][b][c]",
@@ -1245,7 +1249,7 @@ class FF_CLIENT(threading.Thread):
 [FFFFFF]Proudly serving the [00FFCC]Cuddlez Guild ♡
 
 [FFFFFF]Want to see the commands? Just send:  
-[00FF00]/help
+[00CCFF]/help
 
 [C][B][00FFFF]━━━━━━━━━━━━━━━  
 [C][B][FFB300]Dev: Hashir!
@@ -1302,8 +1306,8 @@ Squad 5 has been unlocked for the player.:
 [808080][b][c]Dev: Hashir
             """))
                     sleep(5)
-                    leavee = self.leave_s()
-                    socket_client.send(leavee)
+                   # leavee = self.leave_s()
+                   # socket_client.send(leavee)
                 except Exception as e:
                     try:
                         json_result = get_available_room(data.hex()[10:])
@@ -1867,32 +1871,38 @@ Status : {status}
                     
             # AI COMMAND
             if "1200" in data.hex()[0:4] and b"/ai" in data:
-                try:
-                    json_result = get_available_room(data.hex()[10:])
-                    parsed_data = json.loads(json_result)
-                    uid = parsed_data["5"]["data"]["1"]["data"]                    
-                    clients.send(self.GenResponsMsg("We are connecting with the server, please wait..."))
-                    try:
-                        raw_message = data.decode('utf-8', errors='ignore').replace('\x00', '')
-                        question_part = raw_message.split('/ai')[1]                        
-                        unwanted_chars = ["***", "\\x", "\x00"]
-                        cleaned_question = question_part
-                        for char in unwanted_chars:
-                            cleaned_question = cleaned_question.replace(char, "")                          
-                        question = cleaned_question.strip()
-                        if not question:
-                            raise ValueError("No question provided")
-                        question = question.replace("***", "106") if "***" in question else question
-                        
-                        ai_msg = talk_with_ai(question)
-                        clients.send(self.GenResponsMsg(ai_msg))
-                        
-                    except Exception as ai_error:
-                        print(f"AI Processing Error: {ai_error}")
-                        restart_program()            
-                except Exception as e:
-                    print(f"AI Command Error: {e}")
-                    restart_program()
+	                i = re.split("/ai", str(data))[1]
+	                if "***" in i:
+	                    i = i.replace("***", "106")
+	                sid = str(i).split("(\\x")[0].strip()
+	                headers = {"Content-Type": "application/json"}
+	                payload = {
+	                    "contents": [
+	                        {
+	                            "parts": [
+	                                {"text": sid}
+	                            ]
+	                        }
+	                    ]
+	                }
+	                response = requests.post(
+	                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyDZvi8G_tnMUx7loUu51XYBt3t9eAQQLYo",
+	                    headers=headers,
+	                    json=payload,
+	                )
+	                if response.status_code == 200:
+	                    ai_data = response.json()
+	                    ai_response = ai_data['candidates'][0]['content']['parts'][0]['text']
+	                    json_result = get_available_room(data.hex()[10:])
+	                    parsed_data = json.loads(json_result)
+	                    uid = parsed_data["5"]["data"]["1"]["data"]
+	                    clients.send(
+	                        self.GenResponsMsg(
+	                            ai_response, uid
+	                        )
+	                    )
+	                else:
+	                    print("Error with AI API:", response.status_code, response.text)
 
         
         
@@ -1937,7 +1947,7 @@ Status : {status}
                                 			threading.Thread(target=socket_client.send, args=(packetspam,)).start()
                             			clients.send(
                                 self.GenResponsMsg(
-                                    f"\n\n\n{generate_random_color()} [00FF00]Successfully Spam SeNt !\n\n\n"
+                                    f"\n\n\n{generate_random_color()} [00CCFF]Successfully Spam SeNt !\n\n\n"
                                 )
                             )
                         		else:
@@ -1971,20 +1981,17 @@ Status : {status}
 	                    print(uid)
 	                    info_response = newinfo(uid)
 	                    print(uid)
-	                    uid = uid + 'َKKKKKKKKKKKKK'
-	                    infoo = info_response['info']
-	                    print(infoo)
-	                    basic_info = infoo['basic_info']
+	                    uid = uid + 'َ3391145743'
+	                    info = info_response['info']
+	                    print(info)
+	                    basic_info = info['basic_info']
 	                    
 	                    
 	                    if info_response['status'] == "ok":
 		                    level = basic_info['level']
 		                    likes = basic_info['likes']
 		                    name = basic_info['username']
-		                    region = basic_info['region']
-		                    bio = basic_info['bio']
-		                    if "|" in bio:
-		                       bio = bio.replace("|"," ")		               		                                                          
+		                    region = basic_info['region']               		                                                          
 		                    honorscore = basic_info['honorscore']
 		                    print(level,likes,name,region)
 		                    message_info = (	                    
@@ -1994,7 +2001,6 @@ Status : {status}
 	      	                f"Region : {region}\n"
 	      	                f"Likes : {fix_num(likes)}\n"
 	      	                f"Honor Score : {honorscore}\n"
-	                        f"Bio : {bio}\n"
 	                        
 
 	                        )
@@ -2025,7 +2031,7 @@ Status : {status}
 
 
             # GET 100 LIKES COMMAND
-            import re
+           
             if "1200" in data.hex()[0:4] and b"/like/" in data:
                 import re
                 try:
@@ -2034,7 +2040,7 @@ Status : {status}
                     cleaned_message = raw_message.replace('\x00', '').strip()
                     
                     
-                    default_id = "None"
+                    default_id = None
                     player_id = default_id
                     
                     try:
@@ -2055,9 +2061,9 @@ Status : {status}
                     json_result = get_available_room(data.hex()[10:])
                     parsed_data = json.loads(json_result)
                     uid = parsed_data["5"]["data"]["1"]["data"]
-                    clients.send(self.GenResponsMsg("Sending likes..."))
+                    clients.send(self.GenResponsMsg("Okay Sir, Please Wait.."))
                     
-                    likes_info = send_likes(player_id, uid)
+                    likes_info = send_likes(player_id)
                     player_id = fix_num(player_id)
                     clients.send(self.GenResponsMsg(likes_info))
             
@@ -2067,7 +2073,7 @@ Status : {status}
                         json_result = get_available_room(data.hex()[10:])
                         parsed_data = json.loads(json_result)
                         uid = parsed_data["5"]["data"]["1"]["data"]
-                        error_msg = f"[FF0000]mistake: {e}" if "ID" in str(e) else f"[FF0000]Error in likes: {e}"
+                        error_msg = f"[FF0000]خطأ: {e}" if "ID" in str(e) else f"[FF0000]خطأ في الإعجابات: {e}"
                         clients.send(self.GenResponsMsg(error_msg))
                     except:
                         restart_program()
@@ -2089,65 +2095,65 @@ Status : {status}
 [FFFFFF]Welcome to Cuddlez!
 Guild Bot !!
 
-[C][B][FF0000]━━━━?MENU?━━━━
+[C][B][FF0000]━━━━ GROUP ━━━━
 
 [C][B][FFFFFF][B]Convert the team to:
-[C][B][00FF00]/3s [00ff00]- 3 player Group
-[C][B][00FF00]/5s [00ff00]- 5 player Group
-[C][B][00FF00]/6s [00ff00]- 6 player Group 
+[C][B][00CCFF]/3s [00CCFF]- 3 player Group
+[C][B][00CCFF]/5s [00CCFF]- 5 player Group
+[C][B][00CCFF]/6s [00CCFF]- 6 player Group 
 
 [C][B][FFFFFF][B]Open a team for your friend:
-[C][B][00FF00]/🗿snd/104[c]145[c]933[c]49
+[C][B][00CCFF]/🗿snd/104[c]145[c]933[c]49
 
 [C][B][FFFFFF][B]Invite player to the team
-[C][B][00FF00]/🗿inv/104[c]145[c]933[c]49
+[C][B][00CCFF]/🗿inv/104[c]145[c]933[c]49
 
 [C][B][FFFFFF][B]Spam request to join:
-[C][B][00FF00]/🗿sm/104[c]145[c]933[c]49
+[C][B][00CCFF]/🗿sm/104[c]145[c]933[c]49
 
 [C][B][FF0000]‎━━━━━━━━━━━━
 """
 	                clients.send(self.GenResponsMsg(response_message))
 	                time.sleep(1)
 	                response_mssg = f"""
-[C][B][FF0000]━━━━?MENU 2?━━━━
+[C][B][FF0000]━━━━ MISC ━━━━
 
 [C][B][FFFFFF][B]Spam ROOM:
-[C][B][00FF00]/🗿room/104[c]145[c]933[c]49
+[C][B][00CCFF]/🗿room/104[c]145[c]933[c]49
 
 [C][B][FFFFFF][B]spam friend requests:
-[C][B][00FF00]/🗿spm/104[c]145[c]933[c]49
+[C][B][00CCFF]/🗿spm/104[c]145[c]933[c]49
 
 [C][B][FFFFFF][B]Fetch player information:
-[C][B][00FF00]/🗿info104[c]145[c]933[c]49
+[C][B][00CCFF]/🗿info/104[c]145[c]933[c]49
 
 [C][B][FFFFFF][B]Know the player's status:
-[C][B][00FF00]/🗿status/104[c]145[c]933[c]49
+[C][B][00CCFF]/🗿status/104[c]145[c]933[c]49
 
 [C][B][FFFFFF][B]FPK out if a player is blocked:
-[C][B][00FF00]/🗿check/104[c]145[c]933[c]49
+[C][B][00CCFF]/🗿check/104[c]145[c]933[c]49
 
 [C][B][FF0000]‎━━━━━━━━━━━━
 """	
 	                clients.send(self.GenResponsMsg(response_mssg))
 	                time.sleep(1)
 	                response_mssg = f"""
-[C][B][FF0000]━━━━?MENU 3?━━━━
+[C][B][FF0000]━━━━🌟 EXTRA 🌟━━━━
 	                
 [C][B][FFFFFF][B]Increase the number of account visitors:
-[C][B][00FF00]/🗿visit/104[c]145[c]933[c]49
+[C][B][00CCFF]/🗿visit/104[c]145[c]933[c]49
 
 [C][B][FFFFFF][B]Add 100 likes to the account:
-[C][B][00FF00]/🗿like/104[c]145[c]933[c]49
+[C][B][00CCFF]/🗿like/104[c]145[c]933[c]49
 
 [C][B][FFFFFF][B]Chat with ChatGPT:
-[C][B][00FF00]/🗿ai [Your text here]
+[C][B][00CCFF]/🗿ai [Your text here]
 
 [C][B][FFFFFF][B]Knowing the player's server:
-[C][B][00FF00]/🗿region/104[c]145[c]933[c]49
+[C][B][00CCFF]/🗿region/104[c]145[c]933[c]49
 
 [C][B][FF0000]‎━━━━━━━━━━━━
-[C][B][808080]Dev:  [C][B][00FF00]Hashir!	
+[C][B][808080]Dev:  [C][B][00CCFF]Hashir!	
 """                
 	                clients.send(self.GenResponsMsg(response_mssg))
 
