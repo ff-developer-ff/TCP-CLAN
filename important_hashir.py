@@ -18,7 +18,7 @@ def parse_results(parsed_results):
     return result_dict
 
 
-def krishna_get_proto(input_text):
+def hashir_get_proto(input_text):
     try:
         parsed_results = Parser().parse(input_text)
         parsed_results_objects = parsed_results
